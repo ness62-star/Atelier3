@@ -29,13 +29,12 @@ def prepare_data(train_file, test_file):
     return X_train, X_test, y_train, y_test
 
 
-def train_model(X_train, y_train, max_depth=None):
-    """
-    Entraîne un modèle Decision Tree sur les données d'entraînement.
-    """
-    model = DecisionTreeClassifier(max_depth=max_depth, random_state=42)
+def train_model(X_train, y_train, max_depth=10):
+    """Train a Decision Tree with a limited depth to avoid long training times."""
+    model = DecisionTreeClassifier(max_depth=max_depth, min_samples_split=10, random_state=42)
     model.fit(X_train, y_train)
     return model
+
 
 
 def save_model(model, filename="decision_tree_model.pkl"):
