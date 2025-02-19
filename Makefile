@@ -11,8 +11,8 @@ install:
 
 # Code Quality Checks (formatting & security)
 check:
-	flake8 . --max-line-length=100
-	bandit -r .
+	call venv\Scripts\activate
+	python -m flake8 . --max-line-length=100
 
 # Data Preparation
 prepare:
