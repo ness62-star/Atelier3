@@ -4,7 +4,6 @@ import argparse
 
 def main():
     """Main function to train and evaluate the Decision Tree model."""
-    
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Decision Tree Churn Prediction")
     parser.add_argument("--train_file", type=str, default="churn-bigml-80.csv",
