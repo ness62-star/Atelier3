@@ -7,9 +7,9 @@ def main():
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Decision Tree Churn Prediction")
     parser.add_argument("--train_file", type=str, default="churn-bigml-80.csv",
-                    help="Path to training dataset")
+                        help="Path to training dataset")
     parser.add_argument("--test_file", type=str, default="churn-bigml-20.csv",
-                    help="Path to testing dataset")
+                        help="Path to testing dataset")
     parser.add_argument("--max_depth", type=int, default=None,
                         help="Maximum depth of the decision tree")
     parser.add_argument("--save", action='store_true',
