@@ -2,7 +2,7 @@
 
 # Variables
 PYTHON = python
-VENV_ACTIVATE = venv\Scripts\activate
+VENV_ACTIVATE = call venv\Scripts\activate
 
 # Installation of dependencies
 install:
@@ -11,20 +11,19 @@ install:
 
 # Code Quality Checks (formatting & security)
 check:
-	call venv\Scripts\activate
-	python -m flake8 . --max-line-length=100
+	$(VENV_ACTIVATE) && python -m flake8 . --max-line-length=100
 
 # Data Preparation
 prepare:
-	$(PYTHON) main.py --prepare_data
+	$(VENV_ACTIVATE) && python main.py --prepare_data
 
 # Model Training
 train:
-	$(PYTHON) main.py --train
+	$(VENV_ACTIVATE) && python main.py --train
 
 # Run Tests
 test:
-	pytest tests/
+	$(VENV_ACTIVATE) && pytest tests/
 
 # Full CI/CD Pipeline
 all: install check prepare train test
