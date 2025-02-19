@@ -43,10 +43,10 @@ pipeline {
         stage('Code Quality Checks') {
             steps {
                 script {
-                    echo "Running code quality checks..."
+                    echo 'Running code quality checks...'
                     bat '''
                         call venv\\Scripts\\activate
-                        make check
+                        python -m flake8 . --max-line-length=100
                     '''
                 }
             }
