@@ -19,7 +19,7 @@ prepare:
 
 # Model Training
 train:
-	$(VENV_ACTIVATE) && python main.py --train
+	$(VENV_ACTIVATE) && python main.py --train_file churn-bigml-80.csv --test_file churn-bigml-20.csv
 
 # Run Tests
 test:
