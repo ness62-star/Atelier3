@@ -46,7 +46,7 @@ pipeline {
                     echo 'Running code quality checks...'
                     bat '''
                         call venv\\Scripts\\activate
-                        python -m flake8 . --max-line-length=100
+                        python -m flake8 . --exclude=venv --max-line-length=100
                     '''
                 }
             }
