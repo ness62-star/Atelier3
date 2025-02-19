@@ -5,6 +5,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 
+
 def prepare_data(train_file, test_file):
     train_df = pd.read_csv(train_file)
     test_df = pd.read_csv(test_file)
