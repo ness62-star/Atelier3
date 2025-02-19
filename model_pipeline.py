@@ -36,7 +36,6 @@ def train_model(X_train, y_train, max_depth=10):
     return model
 
 
-
 def save_model(model, filename="decision_tree_model.pkl"):
     """
     Sauvegarde le modèle entraîné dans un fichier.
