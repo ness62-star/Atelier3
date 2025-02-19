@@ -3,7 +3,7 @@ import argparse
 
 
 def main():
-    """Main function to train and evaluate the Decision Tree model."""
+    """Main function to train and evaluate the Decision Tree model."""    
     # Parse command-line arguments
     parser = argparse.ArgumentParser(description="Decision Tree Churn Prediction")
     parser.add_argument("--train_file", type=str, default="churn-bigml-80.csv",
@@ -19,11 +19,13 @@ def main():
 
     args = parser.parse_args()
 
-    # If --prepare_data is used, only prepare data and exit
+    # Always prepare data before training
+    X_train, X_test, y_train, y_test = prepare_data(args.train_file, args.test_file)
+
+    # If --prepare_data is used, stop execution here
     if args.prepare_data:
-        X_train, X_test, y_train, y_test = prepare_data(args.train_file, args.test_file)
         print("Data preparation completed successfully.")
-        return  # Exit early
+        return  # Exits early, but after defining variables
 
     # Train model
     model = train_model(X_train, y_train, max_depth=args.max_depth)
