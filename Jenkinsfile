@@ -20,11 +20,8 @@ pipeline {
             steps {
                 script {
                     echo "Creating and activating virtual environment..."
-                    sh '''
-                        if [ ! -d "$VENV" ]; then
-                            $PYTHON -m venv $VENV
-                        fi
-                        source $VENV/bin/activate
+                    bat '''
+                        if not exist venv python -m venv venv
                     '''
                 }
             }
@@ -34,7 +31,11 @@ pipeline {
             steps {
                 script {
                     echo "Installing dependencies..."
-                    sh 'make install'
+                    bat '''
+                        call venv\\Scripts\\activate
+                        pip install --upgrade pip
+                        pip install -r requirements.txt
+                    '''
                 }
             }
         }
@@ -43,7 +44,10 @@ pipeline {
             steps {
                 script {
                     echo "Running code quality checks..."
-                    sh 'make check'
+                    bat '''
+                        call venv\\Scripts\\activate
+                        make check
+                    '''
                 }
             }
         }
@@ -52,7 +56,10 @@ pipeline {
             steps {
                 script {
                     echo "Preparing dataset..."
-                    sh 'make prepare'
+                    bat '''
+                        call venv\\Scripts\\activate
+                        make prepare
+                    '''
                 }
             }
         }
@@ -61,7 +68,10 @@ pipeline {
             steps {
                 script {
                     echo "Training model..."
-                    sh 'make train'
+                    bat '''
+                        call venv\\Scripts\\activate
+                        make train
+                    '''
                 }
             }
         }
@@ -70,7 +80,10 @@ pipeline {
             steps {
                 script {
                     echo "Running tests..."
-                    sh 'make test'
+                    bat '''
+                        call venv\\Scripts\\activate
+                        make test
+                    '''
                 }
             }
         }
@@ -79,7 +92,9 @@ pipeline {
             steps {
                 script {
                     echo "Deactivating virtual environment..."
-                    sh 'deactivate || true'
+                    bat '''
+                        call venv\\Scripts\\deactivate.bat
+                    '''
                 }
             }
         }
