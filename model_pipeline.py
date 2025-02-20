@@ -79,11 +79,8 @@ def prepare_data(train_file, test_file, sample_fraction=1.0):
     return X_train, X_test, y_train, y_test
 
 
-def train_model(X_train, y_train, max_depth=3, min_samples_split=20, min_samples_leaf=10):
-    """
-    Train a Decision Tree with controlled depth and minimum samples.
-    Added detailed logging to track progress.
-    """
+def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples_leaf=10, timeout=1800):
+    """ Train a Decision Tree with timeout to avoid infinite loops """
     print("Initializing Decision Tree Classifier...")
     model = DecisionTreeClassifier(
         max_depth=max_depth,
@@ -91,13 +88,11 @@ def train_model(X_train, y_train, max_depth=3, min_samples_split=20, min_samples
         min_samples_leaf=min_samples_leaf,
         random_state=42
     )
-    print("Starting model training...")
     start_time = time.time()
-    # Track the training progress
-    print("Fitting model...")
     model.fit(X_train, y_train)
-    end_time = time.time()
-    duration = end_time - start_time
+    duration = time.time() - start_time
+    if duration > timeout:
+        raise TimeoutError("Training took too long and was stopped.")
     print(f"Model training completed in {duration:.2f} seconds.")
     return model
 
