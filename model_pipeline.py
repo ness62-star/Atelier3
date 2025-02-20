@@ -29,6 +29,7 @@ def prepare_data(train_file, test_file, sample_fraction=0.1):
     """
     Load and prepare data for training and testing.
     Use a subset of data for debugging long training times.
+    Encodes categorical features into numerical values.
     """
     print("Loading training data...")
     train_df = pd.read_csv(train_file)
@@ -43,7 +44,15 @@ def prepare_data(train_file, test_file, sample_fraction=0.1):
     y_train = train_df[target]
     X_test = test_df.drop(columns=[target])
     y_test = test_df[target]
-
+    # Encode categorical columns
+    print("Encoding categorical features...")
+    label_encoders = {}
+    for col in X_train.columns:
+        if X_train[col].dtype == 'object':  # If the column is categorical
+            le = LabelEncoder()
+            X_train[col] = le.fit_transform(X_train[col].astype(str))
+            X_test[col] = le.transform(X_test[col].astype(str))
+            label_encoders[col] = le  # Store encoder for potential inverse transform
     print("Data preparation completed.")
     return X_train, X_test, y_train, y_test
 
