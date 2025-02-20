@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import signal
 import time
 from contextlib import contextmanager
+from sklearn.preprocessing import LabelEncoder
 
 
 # Timeout Handler
