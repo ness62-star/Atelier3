@@ -29,11 +29,20 @@ def prepare_data(train_file, test_file):
     return X_train, X_test, y_train, y_test
 
 
-def train_model(X_train, y_train, max_depth=10):
-    """Train a Decision Tree with a limited depth to avoid long training times."""
-    model = DecisionTreeClassifier(max_depth=max_depth, min_samples_split=10, random_state=42)
+def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples_leaf=10):
+    """
+    Train a Decision Tree with controlled depth and minimum samples 
+    to prevent infinite loops and overfitting.
+    """
+    model = DecisionTreeClassifier(
+        max_depth=max_depth,          # Limit the depth to prevent overfitting
+        min_samples_split=min_samples_split,  # Minimum samples required to split
+        min_samples_leaf=min_samples_leaf,    # Minimum samples at leaf node
+        random_state=42
+    )
     model.fit(X_train, y_train)
     return model
+
 
 
 def save_model(model, filename="decision_tree_model.pkl"):
