@@ -6,7 +6,9 @@ import matplotlib.pyplot as plt
 import signal
 import time
 from contextlib import contextmanager
-from sklearn.preprocessing import LabelEncoder
+"""from sklearn.preprocessing import LabelEncoder"""
+from sklearn.preprocessing import StandardScaler
+
 
 
 # Timeout Handler
@@ -81,11 +83,11 @@ def prepare_data(train_file, test_file):
     return X_train, X_test, y_train, y_test
 
 
-def train_model(X_train, y_train, 
-                max_depth=5, 
-                min_samples_split=20, 
-                min_samples_leaf=10, 
-                class_weight='balanced', 
+def train_model(X_train, y_train,
+                max_depth=5,
+                min_samples_split=20,
+                min_samples_leaf=10,
+                class_weight='balanced',
                 n_jobs=-1):
     """
     Train a Decision Tree with optimized parameters for speed and performance.
