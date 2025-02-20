@@ -18,7 +18,7 @@ prepare:
 	$(VENV_ACTIVATE) && python main.py --prepare_data
 
 train:
-	$(VENV_ACTIVATE) && python main.py --train_file churn-bigml-80.csv --test_file churn-bigml-20.csv --max_depth 10
+	$(VENV_ACTIVATE) && python main.py --train_file churn-bigml-80.csv --test_file churn-bigml-20.csv --max_depth 5
 
 # Run Tests
 test:
