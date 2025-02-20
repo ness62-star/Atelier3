@@ -21,7 +21,10 @@ def main():
 
     # Always prepare data before training
     X_train, X_test, y_train, y_test = prepare_data(args.train_file, args.test_file)
-
+    sample_fraction = 0.5  # Use 50% of the data initially
+    X_train = X_train.sample(frac=sample_fraction, random_state=42)
+    y_train = y_train.loc[X_train.index]
+    print(f"Training on {len(X_train)} samples...")
     # If --prepare_data is used, stop execution here
     if args.prepare_data:
         print("Data preparation completed successfully.")
