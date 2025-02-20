@@ -35,14 +35,13 @@ def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples
     to prevent infinite loops and overfitting.
     """
     model = DecisionTreeClassifier(
-        max_depth=max_depth,          # Limit the depth to prevent overfitting
-        min_samples_split=min_samples_split,  # Minimum samples required to split
-        min_samples_leaf=min_samples_leaf,    # Minimum samples at leaf node
+        max_depth=max_depth,
+        min_samples_split=min_samples_split,
+        min_samples_leaf=min_samples_leaf,
         random_state=42
     )
     model.fit(X_train, y_train)
     return model
-
 
 
 def save_model(model, filename="decision_tree_model.pkl"):
