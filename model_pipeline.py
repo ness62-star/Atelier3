@@ -108,7 +108,6 @@ def train_model(X_train, y_train,
     end_time = time.time()
     duration = end_time - start_time
     print(f"Model training completed in {duration:.2f} seconds.")
-    return model training completed in {duration:.2f} seconds.")
     return model
 
 
