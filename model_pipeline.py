@@ -6,9 +6,11 @@ import matplotlib.pyplot as plt
 import signal
 from contextlib import contextmanager
 
+
 # Timeout Handler
 class TimeoutException(Exception):
     pass
+
 
 @contextmanager
 def time_limit(seconds):
@@ -30,12 +32,10 @@ def prepare_data(train_file, test_file, sample_fraction=0.1):
     print("Loading training data...")
     train_df = pd.read_csv(train_file)
     test_df = pd.read_csv(test_file)
-    
     # Debug: Use only 10% of the data
     print(f"Using {sample_fraction*100}% of the data for debugging...")
     train_df = train_df.sample(frac=sample_fraction, random_state=42)
     test_df = test_df.sample(frac=sample_fraction, random_state=42)
-    
     # Separate features and target
     target = 'Churn'
     X_train = train_df.drop(columns=[target])
@@ -54,21 +54,17 @@ def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples
     """
     print("Initializing Decision Tree Classifier...")
     start_time = time.time()
-    
     model = DecisionTreeClassifier(
         max_depth=max_depth,
         min_samples_split=min_samples_split,
         min_samples_leaf=min_samples_leaf,
         random_state=42
     )
-    
     print("Starting model training...")
     model.fit(X_train, y_train)
-    
     end_time = time.time()
     duration = end_time - start_time
     print(f"Model training completed in {duration:.2f} seconds.")
-    
     return model
 
 
