@@ -81,25 +81,34 @@ def prepare_data(train_file, test_file):
     return X_train, X_test, y_train, y_test
 
 
-
-def train_model(X_train, y_train, max_depth=3, min_samples_split=20, min_samples_leaf=10):
+def train_model(X_train, y_train, 
+                max_depth=5, 
+                min_samples_split=20, 
+                min_samples_leaf=10, 
+                class_weight='balanced', 
+                n_jobs=-1):
     """
-    Train a Decision Tree with controlled depth and minimum samples.
-    Added detailed logging to track progress.
+    Train a Decision Tree with optimized parameters for speed and performance.
+    - Limited tree depth
+    - Minimum samples for split and leaf to avoid overfitting
+    - Class weights to handle imbalance
+    - Multi-processing for faster computation
     """
     print("Initializing Decision Tree Classifier...")
-    start_time = time.time()
     model = DecisionTreeClassifier(
         max_depth=max_depth,
         min_samples_split=min_samples_split,
         min_samples_leaf=min_samples_leaf,
+        class_weight=class_weight,
         random_state=42
     )
     print("Starting model training...")
+    start_time = time.time()
     model.fit(X_train, y_train)
     end_time = time.time()
     duration = end_time - start_time
     print(f"Model training completed in {duration:.2f} seconds.")
+    return model training completed in {duration:.2f} seconds.")
     return model
 
 
