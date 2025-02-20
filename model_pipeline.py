@@ -27,58 +27,53 @@ def time_limit(seconds):
         signal.alarm(0)
 
 
-def prepare_data(train_file, test_file):
+def prepare_data(train_file, test_file, sample_fraction=1.0):
     """
     Load and prepare data for training and testing.
-    - Drops 'Area code'
+    - Drops 'Area code' and 'State' columns
     - Encodes 'International plan' and 'Voice mail plan' as binary
-    - Replaces missing values with the mean
-    - Drops rows with more than 50% missing values
-    - Normalizes numerical features
-    - Removes outliers (values more than 3 std devs from the mean)
+    - Handles missing values and removes outliers
+    - Normalizes numerical columns
     """
-    # Load datasets
     print("Loading data...")
     train_df = pd.read_csv(train_file)
     test_df = pd.read_csv(test_file)
     # Combine datasets for consistent preprocessing
-    combined_df = pd.concat([train_df, test_df])
+    combined_df = pd.concat([train_df, test_df], ignore_index=True)
     print(f"Combined dataset shape: {combined_df.shape}")
-    # Drop 'Area code' column
-    if 'Area code' in combined_df.columns:
-        combined_df.drop(columns=['Area code'], inplace=True)
-        print("Dropped 'Area code' column.")
-    # Encode categorical features
-    combined_df['International plan'] = combined_df['International plan'].map({'Yes': 1, 'No': 0})
-    combined_df['Voice mail plan'] = combined_df['Voice mail plan'].map({'Yes': 1, 'No': 0})
+    # Drop 'Area code' and 'State' columns
+    combined_df.drop(columns=['Area code', 'State'], inplace=True)
+    print("Dropped 'Area code' and 'State' columns.")
+    # Encode 'International plan' and 'Voice mail plan' as binary
+    combined_df['International plan'] = combined_df['International plan'].map({'No': 0, 'Yes': 1})
+    combined_df['Voice mail plan'] = combined_df['Voice mail plan'].map({'No': 0, 'Yes': 1})
     print("Encoded 'International plan' and 'Voice mail plan' as binary.")
     # Drop rows with more than 50% missing values
-    thresh = len(combined_df.columns) // 2
-    combined_df.dropna(thresh=thresh, inplace=True)
+    combined_df = combined_df.dropna(thresh=combined_df.shape[1] * 0.5)
     print("Dropped rows with more than 50% missing values.")
-    # Replace remaining NaNs with column mean
-    combined_df.fillna(combined_df.mean(), inplace=True)
-    print("Replaced remaining NaNs with column means.")
+    # Fill missing values with mean (numeric columns only)
+    numeric_cols = combined_df.select_dtypes(include=[np.number]).columns
+    combined_df[numeric_cols] = combined_df[numeric_cols].fillna(combined_df[numeric_cols].mean())
+    # Data Normalization and Scaling
+    scaler = StandardScaler()
+    combined_df[numeric_cols] = scaler.fit_transform(combined_df[numeric_cols])
+    print("Normalized and scaled numerical columns.")
+    # Remove Outliers using Z-score
+    z_scores = np.abs(stats.zscore(combined_df[numeric_cols]))
+    combined_df = combined_df[(z_scores < 3).all(axis=1)]
+    print("Removed outliers using Z-score.")
+    # Split back to training and testing datasets
+    train_size = len(train_df)
+    train_df = combined_df.iloc[:train_size]
+    test_df = combined_df.iloc[train_size:]
     # Separate features and target
     target = 'Churn'
-    X = combined_df.drop(columns=[target])
-    y = combined_df[target].map({'True': 1, 'False': 0})
-    # Normalize numerical features
-    numeric_cols = X.select_dtypes(include=['float64', 'int64']).columns
-    scaler = StandardScaler()
-    X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
-    print("Normalized numerical features.")
-    # Remove outliers (values > 3 standard deviations from mean)
-    for col in numeric_cols:
-        X = X[(X[col] < 3) & (X[col] > -3)]
-    print("Removed outliers.")
-    # Split back into training and testing sets
-    X_train = X.iloc[:len(train_df)]
-    y_train = y.iloc[:len(train_df)]
-    X_test = X.iloc[len(train_df):]
-    y_test = y.iloc[len(train_df):]
+    X_train = train_df.drop(columns=[target])
+    y_train = train_df[target].astype(int)
+    X_test = test_df.drop(columns=[target])
+    y_test = test_df[target].astype(int)
+
     print("Data preparation completed.")
-    print(f"Training set shape: {X_train.shape}, Testing set shape: {X_test.shape}")
     return X_train, X_test, y_train, y_test
 
 
