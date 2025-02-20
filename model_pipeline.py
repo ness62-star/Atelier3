@@ -2,8 +2,24 @@ import pandas as pd
 import joblib
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, ConfusionMatrixDisplay
-from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
+import signal
+from contextlib import contextmanager
+
+# Timeout Handler
+class TimeoutException(Exception):
+    pass
+
+@contextmanager
+def time_limit(seconds):
+    def signal_handler(signum, frame):
+        raise TimeoutException("Training timed out!")
+    signal.signal(signal.SIGALRM, signal_handler)
+    signal.alarm(seconds)
+    try:
+        yield
+    finally:
+        signal.alarm(0)
 
 
 def prepare_data(train_file, test_file, sample_fraction=0.1):
