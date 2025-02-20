@@ -6,41 +6,53 @@ from sklearn.preprocessing import LabelEncoder
 import matplotlib.pyplot as plt
 
 
-def prepare_data(train_file, test_file):
+def prepare_data(train_file, test_file, sample_fraction=0.1):
+    """
+    Load and prepare data for training and testing.
+    Use a subset of data for debugging long training times.
+    """
+    print("Loading training data...")
     train_df = pd.read_csv(train_file)
     test_df = pd.read_csv(test_file)
-
-    # Séparation des features et de la cible
-    target = 'Churn'  # Mets ici le nom exact de la colonne cible
+    
+    # Debug: Use only 10% of the data
+    print(f"Using {sample_fraction*100}% of the data for debugging...")
+    train_df = train_df.sample(frac=sample_fraction, random_state=42)
+    test_df = test_df.sample(frac=sample_fraction, random_state=42)
+    
+    # Separate features and target
+    target = 'Churn'
     X_train = train_df.drop(columns=[target])
     y_train = train_df[target]
     X_test = test_df.drop(columns=[target])
     y_test = test_df[target]
 
-    # Encodage des colonnes catégoriques
-    label_encoders = {}
-    for col in X_train.columns:
-        if X_train[col].dtype == 'object':  # Vérifie si la colonne est catégorique
-            le = LabelEncoder()
-            X_train[col] = le.fit_transform(X_train[col])
-            X_test[col] = le.transform(X_test[col])
-            label_encoders[col] = le  # Stocke l'encodeur pour réutilisation
-
+    print("Data preparation completed.")
     return X_train, X_test, y_train, y_test
 
 
 def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples_leaf=10):
     """
-    Train a Decision Tree with controlled depth and minimum samples
-    to prevent infinite loops and overfitting.
+    Train a Decision Tree with controlled depth and minimum samples.
+    Added detailed logging to track progress.
     """
+    print("Initializing Decision Tree Classifier...")
+    start_time = time.time()
+    
     model = DecisionTreeClassifier(
         max_depth=max_depth,
         min_samples_split=min_samples_split,
         min_samples_leaf=min_samples_leaf,
         random_state=42
     )
+    
+    print("Starting model training...")
     model.fit(X_train, y_train)
+    
+    end_time = time.time()
+    duration = end_time - start_time
+    print(f"Model training completed in {duration:.2f} seconds.")
+    
     return model
 
 
