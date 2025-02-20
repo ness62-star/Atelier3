@@ -26,41 +26,60 @@ def time_limit(seconds):
         signal.alarm(0)
 
 
-def prepare_data(train_file, test_file, sample_fraction=0.1):
+def prepare_data(train_file, test_file):
     """
     Load and prepare data for training and testing.
-    Use a subset of data for debugging long training times.
-    Encodes categorical features into numerical values.
+    - Drops 'Area code'
+    - Encodes 'International plan' and 'Voice mail plan' as binary
+    - Replaces missing values with the mean
+    - Drops rows with more than 50% missing values
+    - Normalizes numerical features
+    - Removes outliers (values more than 3 std devs from the mean)
     """
-    print("Loading training data...")
+    # Load datasets
+    print("Loading data...")
     train_df = pd.read_csv(train_file)
     test_df = pd.read_csv(test_file)
-    # Debug: Use only 10% of the data
-    print(f"Using {sample_fraction*100}% of the data for debugging...")
-    train_df = train_df.sample(frac=sample_fraction, random_state=42)
-    test_df = test_df.sample(frac=sample_fraction, random_state=42)
+    # Combine datasets for consistent preprocessing
+    combined_df = pd.concat([train_df, test_df])
+    print(f"Combined dataset shape: {combined_df.shape}")
+    # Drop 'Area code' column
+    if 'Area code' in combined_df.columns:
+        combined_df.drop(columns=['Area code'], inplace=True)
+        print("Dropped 'Area code' column.")
+    # Encode categorical features
+    combined_df['International plan'] = combined_df['International plan'].map({'Yes': 1, 'No': 0})
+    combined_df['Voice mail plan'] = combined_df['Voice mail plan'].map({'Yes': 1, 'No': 0})
+    print("Encoded 'International plan' and 'Voice mail plan' as binary.")
+    # Drop rows with more than 50% missing values
+    thresh = len(combined_df.columns) // 2
+    combined_df.dropna(thresh=thresh, inplace=True)
+    print("Dropped rows with more than 50% missing values.")
+    # Replace remaining NaNs with column mean
+    combined_df.fillna(combined_df.mean(), inplace=True)
+    print("Replaced remaining NaNs with column means.")
     # Separate features and target
     target = 'Churn'
-    X_train = train_df.drop(columns=[target])
-    y_train = train_df[target]
-    X_test = test_df.drop(columns=[target])
-    y_test = test_df[target]
-    print("Checking cardinality of categorical features...")
-    for col in X_train.columns:
-        if X_train[col].dtype == 'object':
-            num_unique = X_train[col].nunique()
-        print(f"Feature '{col}' has {num_unique} unique values.")
-    # Encode categorical columns
-    print("Encoding categorical features...")
-    label_encoders = {}
-    for col in X_train.columns:
-        if X_train[col].dtype == 'object':  # If the column is categorical
-            le = LabelEncoder()
-            X_train[col] = le.fit_transform(X_train[col].astype(str))
-            X_test[col] = le.transform(X_test[col].astype(str))
-            label_encoders[col] = le  # Store encoder for potential inverse transform
+    X = combined_df.drop(columns=[target])
+    y = combined_df[target].map({'True': 1, 'False': 0})
+    # Normalize numerical features
+    numeric_cols = X.select_dtypes(include=['float64', 'int64']).columns
+    scaler = StandardScaler()
+    X[numeric_cols] = scaler.fit_transform(X[numeric_cols])
+    print("Normalized numerical features.")
+    # Remove outliers (values > 3 standard deviations from mean)
+    for col in numeric_cols:
+        X = X[(X[col] < 3) & (X[col] > -3)]
+    print("Removed outliers.")
+    # Split back into training and testing sets
+    X_train = X.iloc[:len(train_df)]
+    y_train = y.iloc[:len(train_df)]
+    X_test = X.iloc[len(train_df):]
+    y_test = y.iloc[len(train_df):]
     print("Data preparation completed.")
+    print(f"Training set shape: {X_train.shape}, Testing set shape: {X_test.shape}")
     return X_train, X_test, y_train, y_test
+
 
 
 def train_model(X_train, y_train, max_depth=3, min_samples_split=20, min_samples_leaf=10):
