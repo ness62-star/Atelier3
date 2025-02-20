@@ -31,7 +31,7 @@ def prepare_data(train_file, test_file):
 
 def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples_leaf=10):
     """
-    Train a Decision Tree with controlled depth and minimum samples 
+    Train a Decision Tree with controlled depth and minimum samples
     to prevent infinite loops and overfitting.
     """
     model = DecisionTreeClassifier(
