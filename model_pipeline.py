@@ -1,15 +1,16 @@
 import pandas as pd
 import numpy as np
-"""from scipy import stats"""
+from scipy import stats
 import joblib
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report
+import matplotlib.pyplot as plt
 import signal
 import time
 from contextlib import contextmanager
 from sklearn.preprocessing import StandardScaler
 """, confusion_matrix, ConfusionMatrixDisplay"""
-"""import matplotlib.pyplot as plt"""
+
 
 
 class TimeoutException(Exception):
@@ -29,32 +30,23 @@ def time_limit(seconds):
 
 
 def prepare_data(train_file, test_file, sample_fraction=1.0):
-    """
-    Load and prepare data for training and testing.
-    """
+    """Load and prepare data for training and testing."""
     print("Loading data...")
     train_df = pd.read_csv(train_file)
     test_df = pd.read_csv(test_file)
-    # Apply sample fraction to training data only
     if sample_fraction < 1.0:
         train_df = train_df.sample(frac=sample_fraction, random_state=42)
         print(f"Using {sample_fraction*100}% of training data")
-    # Essential preprocessing only
     for df in [train_df, test_df]:
-        # Drop unnecessary columns
         df.drop(columns=['Area code', 'State'], inplace=True)
-        # Binary encoding
         df['International plan'] = df['International plan'].map({'No': 0, 'Yes': 1})
         df['Voice mail plan'] = df['Voice mail plan'].map({'No': 0, 'Yes': 1})
-        # Handle missing values in numeric columns
         numeric_cols = df.select_dtypes(include=[np.number]).columns
         df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())
-    # Scale numeric features
     scaler = StandardScaler()
-    numeric_cols = train_df.select_dtypes(include=[np.number]).columns.drop('Churn')
+    numeric_cols = [col for col in train_df.select_dtypes(include=[np.number]).columns if col != 'Churn']
     train_df[numeric_cols] = scaler.fit_transform(train_df[numeric_cols])
     test_df[numeric_cols] = scaler.transform(test_df[numeric_cols])
-    # Separate features and target
     X_train = train_df.drop(columns=['Churn'])
     y_train = train_df['Churn'].astype(int)
     X_test = test_df.drop(columns=['Churn'])
@@ -70,8 +62,7 @@ def train_model(X_train, y_train, max_depth=3, min_samples_split=20, min_samples
         max_depth=max_depth,
         min_samples_split=min_samples_split,
         min_samples_leaf=min_samples_leaf,
-        random_state=42
-    )
+        random_state=42)
     start_time = time.time()
     try:
         with time_limit(timeout):
