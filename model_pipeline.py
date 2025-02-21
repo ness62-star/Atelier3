@@ -4,12 +4,13 @@ import numpy as np
 import joblib
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report
-""", confusion_matrix, ConfusionMatrixDisplay"""
-"""import matplotlib.pyplot as plt"""
 import signal
 import time
 from contextlib import contextmanager
 from sklearn.preprocessing import StandardScaler
+""", confusion_matrix, ConfusionMatrixDisplay"""
+"""import matplotlib.pyplot as plt"""
+
 
 
 class TimeoutException(Exception):
