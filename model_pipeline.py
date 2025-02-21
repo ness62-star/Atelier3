@@ -3,14 +3,14 @@ import numpy as np
 import joblib
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report
-"""import signal"""
 import time
-"""from contextlib import contextmanager"""
 from sklearn.preprocessing import StandardScaler
 import threading
 """, confusion_matrix, ConfusionMatrixDisplay"""
 """from scipy import stats"""
 """import matplotlib.pyplot as plt"""
+"""from contextlib import contextmanager"""
+"""import signal"""
 
 
 class TimeoutError(Exception):
@@ -21,7 +21,6 @@ def timeout_handler(function, args, kwargs, timeout_duration):
     """Handle timeout for a function call using threading."""
     result = []
     error = []
-
     
     def target():
         try:
