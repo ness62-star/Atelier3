@@ -12,7 +12,6 @@ from sklearn.preprocessing import StandardScaler
 """import matplotlib.pyplot as plt"""
 
 
-
 class TimeoutException(Exception):
     pass
 
