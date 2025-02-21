@@ -21,30 +21,32 @@ def main():
     args = parser.parse_args()
     # Prepare data with specified sample fraction
     X_train, X_test, y_train, y_test = prepare_data(
-        args.train_file, 
-        args.test_file, 
+        args.train_file,
+        args.test_file,
         sample_fraction=args.sample_fraction
     )
-    print(f"Training on {len(X_train)} samples...")    
+    print(f"Training on {len(X_train)} samples...")
     if args.prepare_data:
         print("Data preparation completed successfully.")
         return
     # Train model with timeout
     try:
         model = train_model(
-            X_train, 
-            y_train, 
+            X_train,
+            y_train,
             max_depth=args.max_depth,
-            timeout=300  # 5 minute timeout
+            timeout=300
         )
         # Evaluate model
         accuracy = evaluate_model(model, X_test, y_test)
         print(f"Model accuracy: {accuracy:.2f}")
         # Save model if specified
         if args.save:
-            save_model(model) 
+            save_model(model)
     except TimeoutError as e:
         print(f"Training error: {e}")
         return
+
+
 if __name__ == "__main__":
     main()
