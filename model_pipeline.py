@@ -7,25 +7,34 @@ import signal
 import time
 from contextlib import contextmanager
 from sklearn.preprocessing import StandardScaler
+import threading
 """, confusion_matrix, ConfusionMatrixDisplay"""
 """from scipy import stats"""
 """import matplotlib.pyplot as plt"""
 
 
-class TimeoutException(Exception):
+class TimeoutError(Exception):
     pass
 
 
-@contextmanager
-def time_limit(seconds):
-    def signal_handler(signum, frame):
-        raise TimeoutException("Training timed out!")
-    signal.signal(signal.SIGALRM, signal_handler)
-    signal.alarm(seconds)
-    try:
-        yield
-    finally:
-        signal.alarm(0)
+def timeout_handler(function, args, kwargs, timeout_duration):
+    """Handle timeout for a function call using threading."""
+    result = []
+    error = []
+    def target():
+        try:
+            result.append(function(*args, **kwargs))
+        except Exception as e:
+            error.append(e)
+    thread = threading.Thread(target=target)
+    thread.daemon = True
+    thread.start()
+    thread.join(timeout_duration)
+    if thread.is_alive():
+        raise TimeoutError(f"Function call timed out after {timeout_duration} seconds")
+    if error:
+        raise error[0]
+    return result[0]
 
 
 def prepare_data(train_file, test_file, sample_fraction=1.0):
@@ -64,9 +73,12 @@ def train_model(X_train, y_train, max_depth=3, min_samples_split=20, min_samples
         random_state=42)
     start_time = time.time()
     try:
-        with time_limit(timeout):
-            model.fit(X_train, y_train)
-    except TimeoutException:
+        model = timeout_handler(
+            model.fit,
+            args=(X_train, y_train),
+            kwargs={},
+            timeout_duration=timeout)
+    except TimeoutError:
         raise TimeoutError(f"Training exceeded {timeout} seconds limit")
     duration = time.time() - start_time
     print(f"Training completed in {duration:.2f} seconds")
