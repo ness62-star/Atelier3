@@ -21,7 +21,7 @@ def timeout_handler(function, args, kwargs, timeout_duration):
     """Handle timeout for a function call using threading."""
     result = []
     error = []
-    
+
     def target():
         try:
             result.append(function(*args, **kwargs))
