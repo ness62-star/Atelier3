@@ -8,11 +8,9 @@ import matplotlib.pyplot as plt
 import signal
 import time
 from contextlib import contextmanager
-"""from sklearn.preprocessing import LabelEncoder"""
 from sklearn.preprocessing import StandardScaler
 
 
-# Timeout Handler
 class TimeoutException(Exception):
     pass
 
@@ -32,56 +30,41 @@ def time_limit(seconds):
 def prepare_data(train_file, test_file, sample_fraction=1.0):
     """
     Load and prepare data for training and testing.
-    - Drops 'Area code' and 'State' columns
-    - Encodes 'International plan' and 'Voice mail plan' as binary
-    - Handles missing values and removes outliers
-    - Normalizes numerical columns
     """
     print("Loading data...")
     train_df = pd.read_csv(train_file)
-    test_df = pd.read_csv(test_file)
-    # Combine datasets for consistent preprocessing
-    combined_df = pd.concat([train_df, test_df], ignore_index=True)
-    print(f"Combined dataset shape: {combined_df.shape}")
-    # Drop 'Area code' and 'State' columns
-    combined_df.drop(columns=['Area code', 'State'], inplace=True)
-    print("Dropped 'Area code' and 'State' columns.")
-    # Encode 'International plan' and 'Voice mail plan' as binary
-    combined_df['International plan'] = combined_df['International plan'].map({'No': 0, 'Yes': 1})
-    combined_df['Voice mail plan'] = combined_df['Voice mail plan'].map({'No': 0, 'Yes': 1})
-    print("Encoded 'International plan' and 'Voice mail plan' as binary.")
-    # Drop rows with more than 50% missing values
-    combined_df = combined_df.dropna(thresh=combined_df.shape[1] * 0.5)
-    print("Dropped rows with more than 50% missing values.")
-    # Fill missing values with mean (numeric columns only)
-    numeric_cols = combined_df.select_dtypes(include=[np.number]).columns
-    combined_df[numeric_cols] = combined_df[numeric_cols].fillna(combined_df[numeric_cols].mean())
-    # Data Normalization and Scaling
+    test_df = pd.read_csv(test_file)    
+    # Apply sample fraction to training data only
+    if sample_fraction < 1.0:
+        train_df = train_df.sample(frac=sample_fraction, random_state=42)
+        print(f"Using {sample_fraction*100}% of training data")    
+    # Essential preprocessing only
+    for df in [train_df, test_df]:
+        # Drop unnecessary columns
+        df.drop(columns=['Area code', 'State'], inplace=True)       
+        # Binary encoding
+        df['International plan'] = df['International plan'].map({'No': 0, 'Yes': 1})
+        df['Voice mail plan'] = df['Voice mail plan'].map({'No': 0, 'Yes': 1})      
+        # Handle missing values in numeric columns
+        numeric_cols = df.select_dtypes(include=[np.number]).columns
+        df[numeric_cols] = df[numeric_cols].fillna(df[numeric_cols].mean())    
+    # Scale numeric features
     scaler = StandardScaler()
-    combined_df[numeric_cols] = scaler.fit_transform(combined_df[numeric_cols])
-    print("Normalized and scaled numerical columns.")
-    # Remove Outliers using Z-score
-    z_scores = np.abs(stats.zscore(combined_df[numeric_cols]))
-    combined_df = combined_df[(z_scores < 3).all(axis=1)]
-    print("Removed outliers using Z-score.")
-    # Split back to training and testing datasets
-    train_size = len(train_df)
-    train_df = combined_df.iloc[:train_size]
-    test_df = combined_df.iloc[train_size:]
+    numeric_cols = train_df.select_dtypes(include=[np.number]).columns.drop('Churn')
+    train_df[numeric_cols] = scaler.fit_transform(train_df[numeric_cols])
+    test_df[numeric_cols] = scaler.transform(test_df[numeric_cols])   
     # Separate features and target
-    target = 'Churn'
-    X_train = train_df.drop(columns=[target])
-    y_train = train_df[target].astype(int)
-    X_test = test_df.drop(columns=[target])
-    y_test = test_df[target].astype(int)
-
+    X_train = train_df.drop(columns=['Churn'])
+    y_train = train_df['Churn'].astype(int)
+    X_test = test_df.drop(columns=['Churn'])
+    y_test = test_df['Churn'].astype(int)
     print("Data preparation completed.")
     return X_train, X_test, y_train, y_test
 
 
-def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples_leaf=10, timeout=1800):
-    """ Train a Decision Tree with timeout to avoid infinite loops """
-    print("Initializing Decision Tree Classifier...")
+def train_model(X_train, y_train, max_depth=3, min_samples_split=20, min_samples_leaf=10, timeout=300):
+    """Train a Decision Tree with timeout"""
+    print("Training model...")
     model = DecisionTreeClassifier(
         max_depth=max_depth,
         min_samples_split=min_samples_split,
@@ -89,47 +72,28 @@ def train_model(X_train, y_train, max_depth=5, min_samples_split=20, min_samples
         random_state=42
     )
     start_time = time.time()
-    model.fit(X_train, y_train)
+    try:
+        with time_limit(timeout):
+            model.fit(X_train, y_train)
+    except TimeoutException:
+        raise TimeoutError(f"Training exceeded {timeout} seconds limit")        
     duration = time.time() - start_time
-    if duration > timeout:
-        raise TimeoutError("Training took too long and was stopped.")
-    print(f"Model training completed in {duration:.2f} seconds.")
+    print(f"Training completed in {duration:.2f} seconds")
     return model
 
 
-def save_model(model, filename="decision_tree_model.pkl"):
-    """
-    Sauvegarde le modèle entraîné dans un fichier.
-    """
-    joblib.dump(model, filename)
-    print(f"Modèle sauvegardé sous {filename}")
-
-
-def load_model(filename="decision_tree_model.pkl"):
-    """
-    Charge un modèle sauvegardé.
-    """
-    return joblib.load(filename)
-
-
 def evaluate_model(model, X_test, y_test):
-    """Évaluer le modèle et afficher les métriques de performance."""
+    """Evaluate the model and display performance metrics."""
     y_pred = model.predict(X_test)
-
-    # Accuracy
-    accuracy = accuracy_score(y_test, y_pred)
+    accuracy = accuracy_score(y_test, y_pred)    
+    print("\nModel Evaluation:")
     print(f'Accuracy: {accuracy:.4f}')
-
-    # Classification Report
     print("\nClassification Report:")
-    print(classification_report(y_test, y_pred))
-
-    # Confusion Matrix
-    cm = confusion_matrix(y_test, y_pred)
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot(cmap=plt.cm.Blues)
-    plt.title("Confusion Matrix")
-    plt.show()
-
-    # Retourner la précision pour qu'elle soit utilisée dans le main.py
+    print(classification_report(y_test, y_pred))    
     return accuracy
+
+
+def save_model(model, filename="decision_tree_model.pkl"):
+    """Save the trained model to a file."""
+    joblib.dump(model, filename)
+    print(f"Model saved as {filename}")
