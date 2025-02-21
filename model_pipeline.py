@@ -3,9 +3,9 @@ import numpy as np
 import joblib
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, classification_report
-import signal
+"""import signal"""
 import time
-from contextlib import contextmanager
+"""from contextlib import contextmanager"""
 from sklearn.preprocessing import StandardScaler
 import threading
 """, confusion_matrix, ConfusionMatrixDisplay"""
@@ -21,6 +21,8 @@ def timeout_handler(function, args, kwargs, timeout_duration):
     """Handle timeout for a function call using threading."""
     result = []
     error = []
+
+    
     def target():
         try:
             result.append(function(*args, **kwargs))
